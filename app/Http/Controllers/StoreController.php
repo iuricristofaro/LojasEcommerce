@@ -13,6 +13,7 @@ class StoreController extends Controller
 {
     public function index()
     {
+        
         $pFeatured = Product::featured()->get();
         $pRecommend = Product::recommend()->get();
 

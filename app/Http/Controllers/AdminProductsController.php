@@ -36,8 +36,20 @@ class AdminProductsController extends Controller
 
     public function store(Requests\ProductRequest $request)
     {
-        $this->productModel->create($request->all());
+        $input = $request->all();
+
+        $input['featured'] = $request->get('featured') ? true : false;
+        $input['recommend'] = $request->get('recommend') ? true : false;
+
+        $arrayTags = $this->tagToArray($input['tags']);
+
+        $product = $this->productModel->fill($input);
+        $product->save();
+
+        $product->tags()->sync($arrayTags);
+
         return redirect()->route('admin.products.index');
+
     }
 
    
