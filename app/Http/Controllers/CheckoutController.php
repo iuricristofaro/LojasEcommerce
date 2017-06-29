@@ -45,6 +45,32 @@ class CheckoutController extends Controller
         return view('store.checkout', ['cart'=>'empty', 'categories'=>$categories]);
     }
 
+    public function end(\Illuminate\Http\Request $request, Locator $service, Order $orderModel)
+    {
+        if(!Session::has('cart')){
+            return "Não existe sessão";
+        }
+        $cart = Session::get('cart');
+        $transaction_code = $request->get('transaction_id');
+        $transaction = $service->getByCode($transaction_code);
+        $status = $transaction->getDetails()->getStatus();
+        $payment_type = $transaction->getPayment()->getPaymentMethod()->getType();
+        $netAmount = $transaction->getPayment()->getNetAmount();
+        $order = $orderModel->create([
+            'user_id'=>Auth::user()->id,
+            'total'=>$cart->getTotal(),
+            'status_id'=>$status,
+            'transaction_code'=>$transaction_code,
+            'payment_type_id'=>$payment_type,
+            'netAmount'=>$netAmount,
+        ]);
+        foreach($cart->all() as $k=>$item){
+            $order->items()->create(['product_id'=>$k, 'price'=>$item['price'], 'qtd'=>$item['qtd']]);
+        }
+        $cart->clear();
+        return redirect()->route('account.orders');
+    }
+
     // public function test(CheckoutService $checkoutService)
     // {
     // 	$checkout = $checkoutService->createCheckoutBuilder()
